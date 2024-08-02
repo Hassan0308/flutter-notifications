@@ -6,8 +6,13 @@ class NotificationServices {
 
 
 
-  void firebaseInit(){
+
+  Future<void> firebaseInit()async{
     FirebaseMessaging.onMessage.listen((notification) {
+      print("Notifications");
+      print(notification.notification!.title.toString());
+      print(notification.notification!.body.toString());
+
     });
   }
 

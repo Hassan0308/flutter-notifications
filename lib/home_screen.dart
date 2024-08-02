@@ -16,9 +16,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // TODO: implement initState
     super.initState();
-    notificationServices.checkAndRequestNotificationPermission();
+   // notificationServices.checkAndRequestNotificationPermission();
     notificationServices.firebaseInit();
-    notificationServices.getDeviceToken();
+    notificationServices.getDeviceToken().then((value) =>
+        print(value),
+
+    );
   }
   @override
   Widget build(BuildContext context) {

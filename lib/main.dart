@@ -9,11 +9,6 @@ import 'package:permission_handler/permission_handler.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  // NotificationServices services = NotificationServices();
-  // await Permission.notification.isDenied.then((value) => {
-  //   services.requestNotificationPermission(),
-  //   print(value)
-  // });
   runApp(MyApp());
 }
 

@@ -1,18 +1,70 @@
+import 'dart:math';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class NotificationServices {
   FirebaseMessaging messaging = FirebaseMessaging.instance;
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
+  Future<void> initLocalNotifications(
+      BuildContext context, RemoteMessage message) async {
+    var androidInitializationSettings =
+        const AndroidInitializationSettings('@mipmap/ic_launcher');
+    var iosInitializationSettings = const DarwinInitializationSettings();
+    var initializationSettings = InitializationSettings(
+      android: androidInitializationSettings,
+      iOS: iosInitializationSettings,
+    );
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onDidReceiveNotificationResponse: (payload) {});
+  }
 
+  Future<void> _showNotifications(RemoteMessage message) async {
+    AndroidNotificationChannel androidNotificationChannel =
+        AndroidNotificationChannel(
+            generateRandomNum(), "Important Notification",
+            importance: Importance.max);
+    AndroidNotificationDetails androidNotificationDetails =
+        AndroidNotificationDetails(
+      androidNotificationChannel.id,
+      androidNotificationChannel.name,
+      channelDescription: "Your channel desc",
+      importance: Importance.high,
+      priority: Priority.high,
+      ticker: "ticker",
+    );
+    DarwinNotificationDetails darwinNotificationDetails =
+        const DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentBanner: true,
+    );
+    NotificationDetails notificationDetails = NotificationDetails(
+      android: androidNotificationDetails,
+      iOS: darwinNotificationDetails,
+    );
 
+    Future.delayed(Duration.zero, () {
+      flutterLocalNotificationsPlugin.show(
+          0,
+          message.notification!.title.toString(),
+          message.notification!.body.toString(),
+          notificationDetails);
+    });
+  }
 
-  Future<void> firebaseInit()async{
+  String generateRandomNum() => Random.secure().nextInt(10000).toString();
+
+  Future<void> firebaseInit() async {
     FirebaseMessaging.onMessage.listen((notification) {
       print("Notifications");
       print(notification.notification!.title.toString());
       print(notification.notification!.body.toString());
-
+      _showNotifications(notification);
     });
   }
 
@@ -56,11 +108,12 @@ class NotificationServices {
   }
 
   //Generate FCM Token
-  Future<String?> getDeviceToken() async {
-   return await messaging.getToken();
+  Future<String?> getDeviceToken()  {
+    return  messaging.getToken();
   }
+
   // when token update then call and update db values
-  void onRefreshToken(){
+  void onRefreshToken() {
     messaging.onTokenRefresh.listen((event) {
       event.toString();
       print("refresh");

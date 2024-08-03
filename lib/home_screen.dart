@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_notifications/local_notification_screen.dart';
 import 'package:flutter_notifications/notification_services.dart';
@@ -20,10 +22,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // TODO: implement initState
     super.initState();
-   // notificationServices.checkAndRequestNotificationPermission();
-    notificationServices.firebaseInit();
-    notificationServices.getDeviceToken().then((value)  {
-      token = value;
+  //  notificationServices.checkAndRequestNotificationPermission();
+    notificationServices.firebaseInit(context);
+    notificationServices.setupInteractMessage(context);
+    notificationServices.getDeviceToken().then((value)  async {
+
+      setState(() {
+        token =  value;
+      });
+
       print(value);
 
     }
@@ -42,7 +49,14 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(token??"no token"),
+            GestureDetector(
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: token??"no"));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Copied to clipboard')),
+                  );
+                },
+                child: Text(token??"no")),
             ElevatedButton(
               onPressed: (){
                 Navigator.push(context, MaterialPageRoute(builder: (context)=>LocalNotificationScreen(flutterLocalNotificationsPlugin: flutterLocalNotificationsPlugin)));

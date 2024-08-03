@@ -1,14 +1,18 @@
+import 'dart:io';
 import 'dart:math';
-
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+
+import 'message_screen.dart';
 
 class NotificationServices {
   FirebaseMessaging messaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+  var deviceToken;
 
   Future<void> initLocalNotifications(
       BuildContext context, RemoteMessage message) async {
@@ -20,7 +24,16 @@ class NotificationServices {
       iOS: iosInitializationSettings,
     );
     await flutterLocalNotificationsPlugin.initialize(initializationSettings,
-        onDidReceiveNotificationResponse: (payload) {});
+        onDidReceiveNotificationResponse: (payload) {
+      _handleOnTapNotification(message, context);
+    });
+  }
+
+  void _handleOnTapNotification(RemoteMessage message, BuildContext context) {
+    if (message.data['type'] == "msg") {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => MessageScreen()));
+    }
   }
 
   Future<void> _showNotifications(RemoteMessage message) async {
@@ -36,6 +49,8 @@ class NotificationServices {
       importance: Importance.high,
       priority: Priority.high,
       ticker: "ticker",
+      //after adding icon issue solve
+      icon: '@mipmap/ic_launcher',
     );
     DarwinNotificationDetails darwinNotificationDetails =
         const DarwinNotificationDetails(
@@ -59,11 +74,16 @@ class NotificationServices {
 
   String generateRandomNum() => Random.secure().nextInt(10000).toString();
 
-  Future<void> firebaseInit() async {
+  //When app is open to user
+  Future<void> firebaseInit(BuildContext context) async {
     FirebaseMessaging.onMessage.listen((notification) {
       print("Notifications");
       print(notification.notification!.title.toString());
       print(notification.notification!.body.toString());
+      print(notification.data);
+      if (Platform.isAndroid) {
+        initLocalNotifications(context, notification);
+      }
       _showNotifications(notification);
     });
   }
@@ -108,8 +128,9 @@ class NotificationServices {
   }
 
   //Generate FCM Token
-  Future<String?> getDeviceToken()  {
-    return  messaging.getToken();
+  Future<String?> getDeviceToken() async {
+    deviceToken = await messaging.getToken();
+    return deviceToken;
   }
 
   // when token update then call and update db values
@@ -117,6 +138,20 @@ class NotificationServices {
     messaging.onTokenRefresh.listen((event) {
       event.toString();
       print("refresh");
+    });
+  }
+
+  //When app is terminated then handle on tap
+  Future<void> setupInteractMessage(BuildContext context) async {
+    //When app is terminated then handle on tap
+    RemoteMessage? initialMessage =
+        await FirebaseMessaging.instance.getInitialMessage();
+    if (initialMessage != null) {
+      _handleOnTapNotification(initialMessage, context);
+    }
+    //When app is on background
+    FirebaseMessaging.onMessageOpenedApp.listen((event) {
+      _handleOnTapNotification(event, context);
     });
   }
 }

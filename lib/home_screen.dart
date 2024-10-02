@@ -63,6 +63,11 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               child: Text("Test Local Notifications"),
             ),
+            ElevatedButton(
+              onPressed: (){
+              },
+              child: Text("Send Notification"),
+            ),
           ],
         )
       ),

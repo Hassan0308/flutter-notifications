@@ -42,4 +42,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 /android/app/release/google-services.json
+lib/keys.dart
+
 

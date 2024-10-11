@@ -1,43 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_notifications/home_screen.dart';
+import 'package:flutter_notifications/notification_services.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-import 'local_notification.dart';
+@pragma('vm:entry-point')
+Future<void> _backgroundNotifications(RemoteMessage message)async {
+  await Firebase.initializeApp();
+  print(message.notification?.title.toString());
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-  InitializationSettings initializationSettings = initializePlatformSpecifics();
+  await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(_backgroundNotifications);
 
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-
-  runApp(
-      MyApp(flutterLocalNotificationsPlugin: flutterLocalNotificationsPlugin));
-}
-
-InitializationSettings initializePlatformSpecifics() {
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('app_icon');
-  final InitializationSettings initializationSettings = InitializationSettings(
-    android: initializationSettingsAndroid,
-  );
-  return initializationSettings;
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
-
-  MyApp({required this.flutterLocalNotificationsPlugin});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Local Notifications App',
+      title: 'Flutter FCM Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: LocalNotificationScreen(
-          flutterLocalNotificationsPlugin: flutterLocalNotificationsPlugin),
+      home: HomeScreen(),
     );
   }
 }
+
+
